@@ -1,6 +1,6 @@
 <template>
-  <div v-if="score || showScore" class="kaffe-wrapper">
-    <div class="kaffe-score" v-if="score">
+  <div v-if="interaction" class="kaffe-wrapper">
+    <div class="kaffe-score" v-if="scoring">
       <div v-if="!card">
         <img src="@/assets/scan.gif" alt="scan" class="scan" />
         <h3>Select cups amount on keypad</h3>
@@ -11,7 +11,7 @@
       <div v-if="card && !register">
         <h1>{{ amount }} cups registered!</h1>
         <font-awesome-icon :icon="['fas', 'mug-hot']" size="6x" />
-        <h2>Your score is {{ scoreCount }}</h2>
+        <h2>Your score is {{ newScore }}</h2>
       </div>
 
       <div v-if="card && register">
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-let tm;
+  let tm;
 export default {
   name: "Kaffe",
   created: function () {
@@ -53,15 +53,11 @@ export default {
   },
   data() {
     return {
-      amount: 0,
-      score: false,
-      scoring: false,
-      showScore: false,
-      scoreCount: 0,
       card: false,
-      register: false,
-      tm: null,
-      paytime: false
+      interaction: false,
+      showScore: false,
+      scoring: false,
+      amount: 0,
     };
   },
   methods: {
@@ -75,25 +71,6 @@ export default {
         this.amount--;
       }
     },
-    reset(timeout) {
-      clearTimeout(this.tm);
-      this.tm = setTimeout(
-        function () {
-          this.score = false;
-          this.amount = 0;
-          this.scoreCount = 0;
-          this.card = false;
-          this.scoring = false;
-          this.showScore = false;
-          this.register = false;
-          this.paytime = false;
-        }.bind(this),
-        timeout
-      );
-    },
-    stop() {
-      clearTimeout(this.tm);
-    },
     onkey(e) {
       switch (e.key) {
         case "AudioVolumeUp": // INC
@@ -103,57 +80,55 @@ export default {
           this.decAm();
           break;
         case "5": // SHOW SCORE
-          if (!this.scoring) {
-            console.log("test")
-            this.getScore();
-            this.showScore = true;
-          }
+          this.getScore();
+          this.interaction = true;
+          this.showScore = true;
           break;
         case "6": // SCORING
-          if (!this.showScore) {
-            this.scoring = true;
-            this.score = true;
-            this.addScore();
-          }
+          this.scoring = true;
+          this.interaction = true;
+          this.addScore();
           break;
         case "2": // PAY
-          if (this.register) {
-            this.pay();
-          }
           break;
         case "1": // RESET
-          this.reset(0);
       }
     },
     async getCard() {
-      this.reset(15000);
       const res = await fetch('/api/card');
-      console.log(res)
       const uid = res.json();
-      if (uid != null) {
-        this.card = true;
-      } else {
-        this.reset(0);
+      this.card = true;
+      const exists = await fetch(`/api/exists?uid=${uid}`).then((res)=>{return res.json()});
+      if (!exists) {
+        this.noUser();
       }
       return uid;
     },
+    noUser() {
+      this.register = true;
+      this.cancel(60);
+    },
+    reset(timeout) {
+      clearTimeout(this.tm);
+      this.tm = setTimeout(() => {
+        this.interaction = false;
+        this.scoring = false;
+        this.card = false;
+        this.showScore = false;
+        this.register = false;
+      }.bind(this), timeout*1000);
+    },
     async getUser(uid) {
-      console.log("aaaaaaaaaaaaaaaaaaaaaa")
       const res = await fetch(`/api/user?uid=${uid}`);
-      console.log("dksjdksjdsj")
-      console.log(res.json())
       const user = res.json();
+      this.checkUser(user);
       return user
     },
     async checkUser(user) {
       const date = new Date(user.date)
       let timeDiff = (Date.now() - date) / (1000*3600*24);
-      if (!user) {
-        this.register = true;
-        this.stop();
-      } else if (!user.paid || timediff > 180) {
-        this.pay = true;
-        this.stop();
+      if (!user.paid || timediff > 180) {
+        this.noUser();
       }
     },
     async updateUser(uid, data) {
@@ -166,32 +141,17 @@ export default {
     },
     async getScore() {
       const uid = await this.getCard();
-      console.log(uid)
-      if (uid) {
-        const user = await this.getUser(uid);
-        console.log(user)
-        this.scoreCount = user.score;
-        this.reset(4000);
-      }
+      const user = await this.getUser(uid);
+      this.scoreCount = user.score;
+      this.cancel(5);
     },
     async addScore() {
       const uid = await this.getCard();
-      if (uid) {
-        const user = await this.getUser(uid);
-        if (!user.paid) {
-          this.register = true;
-          this.stop();
-        } else {
-          let newScore = this.amount + user.score;
-          this.updateUser(uid, {score: newScore});
-          this.reset(4000);
-        }
-      }
-    },
-    async pay() {
-      const uid = await this.getCard();
-      this.reset();
-    },
-  },
+      const user = await this.getUser(uid);
+      let newScore = this.amount + user.score;
+      await this.updateUser(uid, {score: newScore})
+      this.cancel(5);
+    }
+  }
 };
 </script>
