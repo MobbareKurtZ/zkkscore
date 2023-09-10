@@ -18,17 +18,23 @@ class DataHandler {
     this.db = getFirestore(app);
   }
 
+  async exists(uid) {
+    let userRef = doc(this.db, "users", uid)
+    const user = await getDoc(userRef);
+    return user.exists();
+  }
+
   async getUser(uid) {
     let userRef = doc(this.db, "users", uid)
     const user = await getDoc(userRef).then((res) => {
       return res.data();
     })
+    console.log(user)
     return user;
   }
 
   async addUser(uid, data) {
-    let users = collection(this.db, "users");
-    await setDoc(doc(users, uid), data);
+    await setDoc(doc(this.db, 'users', uid), data);
   }
 
   async updateUser(uid, data) {

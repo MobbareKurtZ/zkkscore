@@ -8,18 +8,47 @@
         <h2>Scan card after the correct amount is selected</h2>
       </div>
 
-      <div v-if="card && !register">
+      <div v-if="card && userExists && paid">
         <h1>{{ amount }} cups registered!</h1>
         <font-awesome-icon :icon="['fas', 'mug-hot']" size="6x" />
-        <h2>Your score is {{ newScore }}</h2>
+        <h2>Your score is {{ scoreCount }}</h2>
       </div>
 
-      <div v-if="card && register">
-        <h1>Looks like you haven't paid for this half-year!</h1>
+      <div v-if="card && !userExists">
+        <h1>You must register before you can score!</h1>
+        <h2>Please pay first and start scoring!</h2>
+      </div>
+
+      <div v-if="card && userExists && !paid">
+        <h1>Looks like it's been >180 days since you paid last time!</h1>
+        <h2>Please pay first and start scoring!</h2>
+      </div>
+
+    </div>
+
+    <div class="kaffe-score" v-if="register">
+
+      <div v-if="card && !alreadyPaid && !paid">
+        <h1>Register!</h1>
         <img src="@/assets/qr.png" alt="scan" id="qr" />
         <h2>Please pay, then press the pay button to continue!</h2>
         <h3>Press the X if you wish to cancel!</h3>
       </div>
+
+      <div v-if="card && paid && !alreadyPaid">
+        <h1>You are now registered!</h1>
+        <h2>You will have to pay again in 180 days to continue scoring coffee.</h2>
+      </div>
+
+      <div v-if="card && alreadyPaid">
+        <h1>You have already paid for this half year!</h1>
+      </div>
+
+      <div v-if="!card">
+        <img src="@/assets/scan.gif" alt="scan" class="scan" />
+        <h2>Scan card to register</h2>
+      </div>
+
     </div>
 
     <div class="kaffe-show-score" v-if="showScore">
@@ -28,14 +57,14 @@
         <h2>Scan card to show your score</h2>
       </div>
 
-      <div v-if="(card && !register) || scoreCount != 0">
+      <div v-if="(card && userExists)">
         <h2>Your score is {{ scoreCount }}</h2>
         <font-awesome-icon :icon="['fas', 'mug-hot']" size="6x" />
       </div>
 
-      <div v-if="card && register && scoreCount == 0">
+      <div v-if="card && !userExists">
         <h1>You don't have any score!</h1>
-        <h2>Please try to pay first by scoring some coffee.</h2>
+        <h2>Please pay first and start scoring!</h2>
       </div>
     </div>
   </div>
@@ -57,7 +86,13 @@ export default {
       interaction: false,
       showScore: false,
       scoring: false,
+      register: false,
+      userExists: true,
+      paid: true,
+      scoreCount: 0,
       amount: 0,
+      uid: "",
+      alreadyPaid: false
     };
   },
   methods: {
@@ -73,6 +108,12 @@ export default {
     },
     onkey(e) {
       switch (e.key) {
+        case "9": // INC
+          this.incAm();
+          break;
+        case "8": // DEC
+          this.decAm();
+          break;
         case "AudioVolumeUp": // INC
           this.incAm();
           break;
@@ -80,35 +121,55 @@ export default {
           this.decAm();
           break;
         case "5": // SHOW SCORE
-          this.getScore();
-          this.interaction = true;
-          this.showScore = true;
+          if (!this.interaction) {
+            this.getScore();
+            this.interaction = true;
+            this.showScore = true;
+          }
           break;
         case "6": // SCORING
-          this.scoring = true;
-          this.interaction = true;
-          this.addScore();
+          if (!this.interaction) {
+            this.scoring = true;
+            this.interaction = true;
+            this.addScore();
+          }
           break;
         case "2": // PAY
+          if (!this.register && !this.interaction) {
+            this.register = true;
+            this.interaction = true;
+            this.pay(false);
+          } else if (this.register){
+            this.pay(true)
+          }
           break;
         case "1": // RESET
+          this.cancel(0);
       }
     },
-    async getCard() {
-      const res = await fetch('/api/card');
-      const uid = res.json();
+    async getCard(pay=false) {
+      const uid = await fetch('/api/card')
+        .then((res) => res.json())
+        .then((uid) => {return uid});
       this.card = true;
-      const exists = await fetch(`/api/exists?uid=${uid}`).then((res)=>{return res.json()});
-      if (!exists) {
-        this.noUser();
+      const exist = await this.uidExists(uid);
+      if (!exist && !pay) {
+        this.userExists = false;
+        return false;
       }
       return uid;
     },
-    noUser() {
-      this.register = true;
-      this.cancel(60);
+    async uidExists(uid) {
+      const exists = await fetch(`/api/exists?uid=${uid}`)
+        .then((res) => res.json() )
+        .then((exists) => {return exists} );
+      return (exists === 'true');
     },
-    reset(timeout) {
+    noUser() {
+      this.userExists = false;
+      this.cancel(5);
+    },
+    cancel(timeout) {
       clearTimeout(this.tm);
       this.tm = setTimeout(() => {
         this.interaction = false;
@@ -116,19 +177,30 @@ export default {
         this.card = false;
         this.showScore = false;
         this.register = false;
-      }.bind(this), timeout*1000);
+        this.userExist = true;
+        this.paid = true;
+        this.scoreCount = 0;
+        this.amount = 0;
+        this.alreadyPaid = false;
+        this.stopReader();
+      }, timeout*1000);
+    },
+    async stopReader() {
+      await fetch(`/api/cardstop`);
     },
     async getUser(uid) {
-      const res = await fetch(`/api/user?uid=${uid}`);
-      const user = res.json();
+      const user = await fetch(`/api/user?uid=${uid}`)
+        .then((res) => res.json())
+        .then((user) => {return user});
       this.checkUser(user);
       return user
     },
     async checkUser(user) {
       const date = new Date(user.date)
       let timeDiff = (Date.now() - date) / (1000*3600*24);
-      if (!user.paid || timediff > 180) {
-        this.noUser();
+      if (!user.paid || timeDiff > 180) {
+        this.paid = false;
+        this.cancel(5);
       }
     },
     async updateUser(uid, data) {
@@ -141,16 +213,66 @@ export default {
     },
     async getScore() {
       const uid = await this.getCard();
-      const user = await this.getUser(uid);
-      this.scoreCount = user.score;
+      if (uid) {
+        const user = await this.getUser(uid);
+        this.scoreCount = user.score;
+        this.cancel(5);
+        return;
+      }
       this.cancel(5);
     },
     async addScore() {
       const uid = await this.getCard();
-      const user = await this.getUser(uid);
-      let newScore = this.amount + user.score;
-      await this.updateUser(uid, {score: newScore})
-      this.cancel(5);
+      if (uid) {
+        const user = await this.getUser(uid);
+        this.userExists = true;
+        if (this.paid) {
+          let newScore = this.amount + user.score;
+          this.scoreCount = newScore;
+          await this.updateUser(uid, {score: newScore})
+          this.cancel(5);
+          return;
+        }
+      }
+      this.cancel(10);
+      return;
+    },
+    async pay(paid) {
+      if (!paid) {
+        const uid = await this.getCard(true);
+        this.uid = uid;
+        if (await this.uidExists(uid)) {
+          const user = await this.getUser(uid);
+          if (!this.paid) {
+            this.cancel(30);
+          } else {
+            this.alreadyPaid = true;
+            this.cancel(5);
+          }
+        } else {
+          this.userExists = false;
+          this.paid = false;
+        }
+      } else {
+        if (this.userExists) {
+          const data = {paid: true, date: new Date(Date.now())};
+          this.updateUser(this.uid, data);
+          this.paid = true;
+          this.cancel(5);
+          return;
+        } else {
+          const data = {paid: true, date: new Date(Date.now()), score: 0};
+          console.log(data);
+          const res = await fetch('/api/adduser', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({uid: this.uid, data: data})
+          })
+          this.paid = true;
+          this.cancel(5);
+          return;
+        }
+      }
     }
   }
 };

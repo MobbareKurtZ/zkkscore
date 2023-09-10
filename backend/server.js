@@ -9,19 +9,32 @@ const port = 3080;
 const dh = new DataHandler();
 const rd = new Reader();
 
+app.use(express.static('../dist/'));
+
 app.use(bodyParser.json());
 
 app.get('/api/card', async (req, res) => {
   const uid = await rd.run();
-  console.log(uid)
   res.json(uid);
+});
+
+app.get('/api/cardstop', async (req, res) => {
+  await rd.stop();
+  res.json("Stopped")
+});
+
+app.get('/api/exists', async (req, res) => {
+  const uid = req.query.uid;
+  console.log(`Existing user ${uid}?`)
+  const exists = await dh.exists(uid);
+  res.json(`${exists}`);
 });
 
 app.get('/api/user', async (req, res) => {
   const uid = req.query.uid;
   console.log(`Fetching user ${uid}`)
   const user = await dh.getUser(uid);
-  res.json(`${user}`);
+  res.json(user)
 });
 
 app.post('/api/adduser', async (req, res) => {
@@ -39,8 +52,6 @@ app.post('/api/updateuser', async (req, res) => {
   await dh.updateUser(uid, data);
   res.json("User updated!");
 });
-
-
 
 app.listen(port, () => {
   console.log(`Server listening on the port::${port}`);

@@ -9,4 +9,4 @@ import { faCoffee, faMugHot } from '@fortawesome/free-solid-svg-icons'
 
 library.add(faCoffee, faMugHot);
 
-createApp(App).mount('#app')
+createApp(App).component('font-awesome-icon', FontAwesomeIcon).mount('#app')

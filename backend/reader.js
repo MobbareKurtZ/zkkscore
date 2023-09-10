@@ -1,20 +1,29 @@
 import RPiMfrc522 from "rpi-mfrc522";
+import { Gpio } from 'onoff';
 
 class Reader {
   constructor() {
     console.log('Init reader')
     this.mfrc522 = new RPiMfrc522();
     this.count = 0;
+    this.LED = new Gpio(4, 'out');
   }
 
   async run() {
     this.count = 0;
+    this.LED.writeSync(1);
     let uid;
     await this.mfrc522.init();
     do {
       uid = await this.cardDetect();
     } while (uid == null && this.count < 8);
+    this.LED.writeSync(0);
     return uid
+  }
+
+  async stop() {
+    this.count = 100;
+    return true;
   }
 
   async cardDetect() {
