@@ -10,6 +10,7 @@ cd backend && npm install
 
 ### Build
 
+(from root, not in backend/)
 ```sh
 npm run build
 ```
