@@ -1,13 +1,13 @@
 #!/bin/bash
 
-git clone https://github.com/MobbareKurtZ/zkkscore.git
+git pull
 
 npm install
 
 npm run build
 
-pm2 restart zkkscore
-
 cd backend/
 
 pip install -r requirements.txt
+
+pm2 restart zkkscore
