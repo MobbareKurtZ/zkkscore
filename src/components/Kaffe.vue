@@ -31,8 +31,8 @@
       <div v-if="card && !alreadyPaid && !paid">
         <h1>Register!</h1>
         <img src="@/assets/qr.png" alt="scan" id="qr" />
-        <h2>Please pay, then press the pay button to continue!</h2>
-        <h3>Press the X if you wish to cancel!</h3>
+        <h2>Please pay, then press the Pay button to continue!</h2>
+        <h3>Press the orange button if you wish to cancel!</h3>
       </div>
 
       <div v-if="card && paid && !alreadyPaid">
@@ -147,8 +147,8 @@ export default {
           this.cancel(0);
       }
     },
-    async getCard(pay=false) {
-      const uid = await fetch('/api/card')
+    async getCard(pay=false, tm=6) {
+      const uid = await fetch(`/api/card?timeout=${tm}`)
         .then((res) => res.json())
         .then((uid) => {return uid});
       this.card = true;

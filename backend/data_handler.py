@@ -6,19 +6,16 @@ class DataHandler:
         self.setup_connection();
 
     def setup_connection(self):
-        credentials = ServiceAccountCredentials.from_json_keyfile_name('cred.json')
+        credentials = ServiceAccountCredentials.from_json_keyfile_name('./backend/cred.json')
         self.client = gspread.authorize(credentials)
         self.db = self.client.open("database").sheet1
 
     def update_user(self, uid, data):
         if self.exists(uid):
-            data = self.decode_data(uid, data)
             user = self.get_user(uid);
-            for i, v in enumerate(data):
-                if v == None:
-                    data[i] = user[i]
+            user.update(data)
+            data = self.decode_data(uid, user)
             row = self.get_cell(uid).row
-            print(row)
             self.db.update(values=[data], range_name=f'A{row}:D{row}')
         return None
 
@@ -30,7 +27,8 @@ class DataHandler:
         if self.exists(uid):
             user_cell = self.get_cell(uid)
             user = self.db.row_values(user_cell.row)
-        return self.encode_data(user)
+            user = self.encode_data(user)
+        return user
 
     def add_user(self, uid, data):
         data = self.decode_data(uid, data)
@@ -38,7 +36,7 @@ class DataHandler:
         return None
 
     def exists(self, uid):
-        user_cell = self.db.find(uid)
+        user_cell = self.db.find(str(uid))
         return user_cell is not None
 
     def decode_data(self, uid, data):
@@ -48,9 +46,3 @@ class DataHandler:
     def encode_data(self, data):
         return {"uid": data[0], "score": data[1], "date": data[2], "paid": data[3]}
 
-d = DataHandler()
-
-data = [12, "nu", True]
-
-d.exists("testuid")
-d.add_user("ralf", {'score': 14, 'date': 'sdsds', 'paid': False})

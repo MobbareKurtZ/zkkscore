@@ -7,3 +7,7 @@ npm install
 npm run build
 
 pm2 restart zkkscore
+
+cd backend/
+
+pip install -r requirements.txt

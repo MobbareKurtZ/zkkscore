@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd ./backend/
-npm run start
+python3 backend/server.py
