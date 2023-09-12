@@ -1,52 +1,52 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 
-from reader import FileHandler, Reader
+#from reader import Reader
+from data_handler import DataHandler
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../dist/', static_url_path='/')
 CORS(app)
 
-handler = FileHandler()
-reader = Reader()
+dh = DataHandler()
+rd = Reader()
+rd = None
 
 @app.route("/")
 @cross_origin(origin='*')
-def hello_world():
-    return "hello"
+def index():
+    return app.send_static_file('index.html')
 
-
-@app.route("/get-user")
+@app.route("/api/getuser")
 @cross_origin(origin='*')
 def get_user():
-    req = request.args.get('uuid')
-    user = handler.getUser(req)
+    req = request.args.get('uid')
+    user = dh.get_user(req)
     return jsonify(user)
 
-
-@app.route("/scan")
+@app.route("/api/card")
 @cross_origin(origin='*')
 def scan():
     timeout = request.args.get('timeout')
-    return str(reader.listen(timeout))
+    return str(rd.listen(timeout))
 
-@app.route("/stop")
+@app.route("/api/cardstop")
 @cross_origin(origin='*')
 def stop():
-    return str(reader.stop())
+    return str(rd.stop())
 
-    
-@app.route("/score")
+@app.route("/api/updateuser", methods=["POST"])
 @cross_origin(origin='*')
-def score():
-    uuid = request.args.get('uuid')
-    inc = request.args.get('inc')
-    return jsonify(handler.score(uuid, inc))
+def update_user():
+    uid = request.form.get('uid')
+    data = request.form.get('data')
+    return jsonify(dh.update_user(uid, data))
 
-@app.route("/pay", methods=['POST'])
+@app.route("/api/adduser", methods=['POST'])
 @cross_origin(origin='*')
-def pay():
-    uuid = request.args.get('uuid')
-    return jsonify(handler.pay(uuid))
+def add_user():
+    uid = request.form.get('uid')
+    data = request.form.get('data')
+    return jsonify(dh.add_user(uid, data))
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, threaded=True)
+    app.run(host="0.0.0.0", port=3080, threaded=True)
