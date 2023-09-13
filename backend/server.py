@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 
@@ -49,6 +50,12 @@ def exists():
 @cross_origin(origin='*')
 def stop():
     return str(rd.stop())
+
+@app.route("/api/redeploy")
+@cross_origin(origin='*')
+def redeploy():
+    print("REDEPLOYING!")
+    os.system("/bin/bash /home/pi/zkkscore/redeploy.sh")
 
 @app.route("/api/updateuser", methods=["POST"])
 @cross_origin(origin='*')

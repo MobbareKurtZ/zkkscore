@@ -35,7 +35,8 @@ body {
 
     .kaffe-wrapper {
         padding: 1rem;
-        height: 50vh;
+        height: auto;
+        min-height: 35vh;
         width: 30vw;
         position: fixed;
         bottom: 0;
@@ -46,6 +47,26 @@ body {
         border-radius: 1rem;
         overflow: hidden;
 
+        .help {
+          height: 150%;
+          position: relative;
+          bottom: 0;
+
+          hr {
+            border-top: 3px solid rgb(84, 174, 235);
+            margin: auto;
+            width: 40%;
+            margin-top: 7px;
+            margin-bottom: 7px;
+          }
+
+          div {
+            padding: 10px;
+            border: rgb(84, 174, 235) 5px inset;
+            border-radius: 1rem;
+          }
+        }
+
         .scan {
             width: 100%;
             position: absolute;
@@ -55,6 +76,7 @@ body {
         }
 
         .kaffe-score {
+          height: 40vh;
 
             h1, h3 {
                 z-index: 1;

@@ -23,7 +23,30 @@
         <h1>Looks like it's been >180 days since you paid last time!</h1>
         <h2>Please pay first and start scoring!</h2>
       </div>
+    </div>
 
+    <div v-if="help" class="help">
+      <h1>Help!</h1>
+      <div>
+        <h3>Register</h3>
+        <hr>
+        <p>Press Pay, scan your student card, scan the QR code, press pay again and you're registered for the next 180 days!</p>
+      </div>
+      <div>
+        <h3>Score coffee</h3>
+        <hr>
+        <p>Press Score Coffee, select the amount of cups you want to register with the knob, then scan your student card.</p>
+      </div>
+      <div>
+        <h3>Show score</h3>
+        <hr>
+        <p>Press Show Score, scan your student card.</p>
+      </div>
+      <div>
+        <h3>Useful</h3>
+        <hr>
+        <p>You can cancel with the orange button</p>
+      </div>
     </div>
 
     <div class="kaffe-score" v-if="register">
@@ -92,7 +115,9 @@ export default {
       scoreCount: 0,
       amount: 0,
       uid: "",
-      alreadyPaid: false
+      alreadyPaid: false,
+      help: false,
+      currcode: ""
     };
   },
   methods: {
@@ -107,6 +132,8 @@ export default {
       }
     },
     onkey(e) {
+      console.log(e.key)
+      this.redeploy(e.key);
       switch (e.key) {
         case "9": // INC
           this.incAm();
@@ -119,6 +146,12 @@ export default {
           break;
         case "AudioVolumeDown": // DEC
           this.decAm();
+          break;
+        case "4": // HELP
+          if (!this.interaction) {
+            this.interaction = true;
+            this.help = true;
+          }
           break;
         case "5": // SHOW SCORE
           if (!this.interaction) {
@@ -147,7 +180,15 @@ export default {
           this.cancel(0);
       }
     },
-    async getCard(pay=false, tm=6) {
+    async redeploy(key) {
+      console.log(this.currcode)
+      this.currcode += key;
+      if (this.currcode == "22554646") {
+        await fetch(`/api/redeploy`)
+          .then((res) => res.json())
+      }
+    },
+    async getCard(pay=false, tm=10) {
       const uid = await fetch(`/api/card?timeout=${tm}`)
         .then((res) => res.json())
         .then((uid) => {return uid});
@@ -183,6 +224,9 @@ export default {
         this.amount = 0;
         this.alreadyPaid = false;
         this.stopReader();
+        this.help = false;
+        this.currcode = "";
+        this
       }, timeout*1000);
     },
     async stopReader() {
