@@ -23,7 +23,7 @@ On the Raspberry PI you can run
 ```sh
 pm2 <start/restart/stop> zkkscore
 ```
- to run the backend.
+ to handle the backend.
 
 ### Redeploy on Raspberry PI
 A redeploy runs every morning at 7:00 can also be triggered by running
