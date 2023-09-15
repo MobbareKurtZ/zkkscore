@@ -266,7 +266,7 @@ export default {
         this.cancel(5);
         return;
       }
-      this.cancel(0);
+      this.cancel(5);
       return;
     },
     async addScore() {
