@@ -197,6 +197,8 @@ export default {
       if (!exist && !pay) {
         this.userExists = false;
         return false;
+      } else if (exist) {
+        this.userExists = true;
       }
       return uid;
     },
