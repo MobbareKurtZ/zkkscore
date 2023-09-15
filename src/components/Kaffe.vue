@@ -226,6 +226,7 @@ export default {
         this.stopReader();
         this.help = false;
         this.currcode = "";
+        this.uid = "";
         this
       }, timeout*1000);
     },
@@ -263,7 +264,8 @@ export default {
         this.cancel(5);
         return;
       }
-      this.cancel(5);
+      this.cancel(0);
+      return;
     },
     async addScore() {
       const uid = await this.getCard();
