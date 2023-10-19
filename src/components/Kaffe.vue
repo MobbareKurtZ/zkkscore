@@ -117,7 +117,8 @@ export default {
       uid: "",
       alreadyPaid: false,
       help: false,
-      currcode: ""
+      currcode: "",
+      curref: ""
     };
   },
   methods: {
@@ -134,6 +135,7 @@ export default {
     onkey(e) {
       console.log(e.key)
       this.redeploy(e.key);
+      this.refresh(e.key);
       switch (e.key) {
         case "9": // INC
           this.incAm();
@@ -178,6 +180,13 @@ export default {
           break;
         case "1": // RESET
           this.cancel(0);
+      }
+    },
+    async refresh(key) {
+      console.log(this.curref)
+      this.curref += key;
+      if (this.curref == "1111") {
+        this.$parent.updateKey += 1;
       }
     },
     async redeploy(key) {

@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <Slide ref="$slideref"/>
-    <Kaffe @triggerFunc="triggerFunc"/>
+    <Slide :updateKey="updateKey"/>
+    <Kaffe />
   </div>
 </template>
 
@@ -10,15 +10,19 @@ import Slide from './components/Slide.vue'
 import Kaffe from './components/Kaffe.vue'
 
 export default {
-  import {ref} from 'vue'
   name: 'App',
   components: {
     Kaffe, Slide
-  }
-  methods: {
-    triggerFunc(){
-      this.$refs.$slideref.forceRerender()
-    }
+  },
+  data() {
+    return {
+      updateKey: 0,
+    };
+  },
+  mounted: () => {
+    window.setInterval(() => {
+      this.forceRerender()
+    }, 3600000)
   }
 }
 </script>

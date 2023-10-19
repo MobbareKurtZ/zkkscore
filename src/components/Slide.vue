@@ -7,21 +7,7 @@
 <script>
 
 export default {
-  name: 'Slide'
-  data() {
-    return {
-      updateKey: 0,
-    };
-  },
-  methods: {
-    forceRerender() {
-      this.updateKey += 1;
-    }
-  }
-  mounted: () => {
-    window.setInterval(() => {
-      this.forceRerender()
-    }, 3600000)
-  }
+  name: 'Slide',
+  props: ["updateKey"]
 }
 </script>
