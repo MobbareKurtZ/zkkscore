@@ -1,5 +1,6 @@
 <template>
   <div v-if="interaction" class="kaffe-wrapper">
+    <div>{{curref}}</div>
     <div class="kaffe-score" v-if="scoring">
       <div v-if="!card">
         <img src="@/assets/scan.gif" alt="scan" class="scan" />
