@@ -183,10 +183,10 @@ export default {
       }
     },
     async refresh(key) {
-      console.log(this.curref)
       this.curref += key;
-      if (this.curref == "1111") {
+      if (this.curref.substr(this.curref.length - 4) == "1111") {
         this.$parent.updateKey += 1;
+        this.curref = "";
       }
     },
     async redeploy(key) {
