@@ -184,13 +184,11 @@ export default {
     },
     async refresh(key) {
       this.curref += key;
-      if (this.curref.substr(this.curref.length - 4) == "1111") {
+      if (this.curref.substr(this.curref.length - 4) == "4444") {
         this.$parent.updateKey += 1;
-        this.curref = "";
       }
     },
     async redeploy(key) {
-      console.log(this.currcode)
       this.currcode += key;
       if (this.currcode == "22554646") {
         await fetch(`/api/redeploy`)
@@ -237,6 +235,7 @@ export default {
         this.stopReader();
         this.help = false;
         this.currcode = "";
+        this.curref = "";
         this.uid = "";
         this
       }, timeout*1000);
