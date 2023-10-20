@@ -118,7 +118,7 @@ export default {
       alreadyPaid: false,
       help: false,
       currcode: "",
-      curref: ""
+      curref: 0
     };
   },
   methods: {
@@ -135,7 +135,6 @@ export default {
     onkey(e) {
       console.log(e.key)
       this.redeploy(e.key);
-      this.refresh(e.key);
       switch (e.key) {
         case "9": // INC
           this.incAm();
@@ -150,6 +149,7 @@ export default {
           this.decAm();
           break;
         case "4": // HELP
+          this.refresh()
           if (!this.interaction) {
             this.interaction = true;
             this.help = true;
@@ -182,10 +182,12 @@ export default {
           this.cancel(0);
       }
     },
-    async refresh(key) {
-      this.curref += key;
-      if (this.curref.substr(this.curref.length - 4) == "4444") {
+    async refresh() {
+      this.curref++;
+      console.log(this.curref)
+      if (this.curref > 3) {
         this.$parent.updateKey += 1;
+        this.curref = 0;
       }
     },
     async redeploy(key) {
@@ -235,7 +237,7 @@ export default {
         this.stopReader();
         this.help = false;
         this.currcode = "";
-        this.curref = "";
+        this.curref = 0;
         this.uid = "";
         this
       }, timeout*1000);
